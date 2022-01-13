@@ -60,17 +60,17 @@
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function () {
                 if(this.readyState == 4 && this.status == 200) {
-                    let phonebook = JSON.parse(this.responseText);
+                    var phonebook = JSON.parse(this.responseText);
                     friends = phonebook.filter(contact => !contact.company);
                     colleagues = phonebook.filter(contact => contact.company);
                     vm.phonebook = colleagues;
                 }
             };
-            xmlhttp.open("GET", "phoneBook.json", true);
+            xmlhttp.open("GET", "https://raw.githubusercontent.com/Konrad-S/Phonebook/main/phoneBook.json", true);
             xmlhttp.send();
 
-            var friends = {};
-            var colleagues = {};
+            var friends;
+            var colleagues;
             let app = Vue.createApp({
                 data() {
                     return {
