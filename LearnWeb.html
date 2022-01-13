@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                background-color: red";
+            }
+            div {
+                margin: auto;
+            }
+            section {
+                border: 2px solid green;
+                border-radius: 10px;
+                background-color: lightgreen;
+                padding: 2px;
+                
+            }
+            ul {
+                list-style-type: none;
+            }
+            li {
+                padding: 5px;
+                width: 500px;
+            }
+            button {
+                background-color: lightsalmon;
+                border-radius: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id='app'>
+            <button v-on:click="ShowFriends">Friends</button>
+            <button v-on:click="ShowColleagues">Colleagues</button>
+            <ul>
+                <li v-for="(contact, i) in phonebook">
+                    <section v-if="i != editingIndex">
+                        <div><b>Name: </b>{{ contact.name}}</div>
+                        <div><b>Phone:</b> {{ contact.phone }}</div>
+                        <div v-if="contact.company">
+                            <b>Company:</b> {{ contact.company }}
+                        </div>
+                        <button v-on:click="StartEdit(contact, i)">Edit</button>
+                    </section>
+                    <section v-else>
+                        <b>Name: <input :placeholder="contact.name" v-model="tempContact.name">
+                        Phone: <input type="tel" :placeholder="contact.phone" v-model="tempContact.phone">
+                        Company: </b><input :placeholder="contact.company" v-model="tempContact.company">
+                        <button v-on:click="SaveEdit(contact, i)">Save</button>
+                        <button v-on:click="CancelEdit(contact, i)">Cancel</button>
+                        <button v-on:click="DeleteEdit(i)">Delete</button>
+                    </section>
+                </li>
+                <button v-if="editingIndex < 0" v-on:click="AddContact">Add Contact</button>
+            </ul>
+        </div>
+
+        <script src="https://unpkg.com/vue@next"></script>
+        <script>
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function () {
+                if(this.readyState == 4 && this.status == 200) {
+                    let phonebook = JSON.parse(this.responseText);
+                    friends = phonebook.filter(contact => !contact.company);
+                    colleagues = phonebook.filter(contact => contact.company);
+                    vm.phonebook = colleagues;
+                }
+            };
+            xmlhttp.open("GET", "phoneBook.json", true);
+            xmlhttp.send();
+
+            var friends = {};
+            var colleagues = {};
+            let app = Vue.createApp({
+                data() {
+                    return {
+                        phonebook: {},
+                        showingFriends: false,
+                        tempContact: {
+                            name: "",
+                            phone: "",
+                            company: ""
+                        },
+                        editingIndex: -1
+                    }
+                },
+                methods: {
+                    ShowFriends() {
+                        this.CancelEdit(this.phonebook[this.editingIndex], this.editingIndex);
+                        this.phonebook = friends;
+                    },
+                    ShowColleagues() {
+                        this.CancelEdit(this.phonebook[this.editingIndex], this.editingIndex);
+                        this.phonebook = colleagues;
+                    },
+                    StartEdit (contact, i) {
+                        tempContact = Object.assign(this.tempContact, contact);
+                        this.editingIndex = i;
+                    },
+                    SaveEdit (contact, i) {
+                        if((!tempContact.name) && (!tempContact.phone) && (!tempContact.company)) {
+                            this.DeleteEdit(i);
+                            return;
+                        }
+                        let regex = /[^0-9-]/g
+                        let newIndex = -1;
+                        if(this.tempContact.phone.match(regex)) {
+                            alert("Phone number must contain only digits");
+                            this.tempContact.phone = contact.phone;
+                            newIndex = i;
+                        }
+                        contact = Object.assign(contact, this.tempContact);
+                        this.editingIndex = newIndex;
+                    },
+                    DeleteEdit (i) {
+                        this.phonebook.splice(i, 1)
+                        this.editingIndex = -1;
+                    },
+                    CancelEdit(contact, i) {
+                        if(this.editingIndex < 0) {
+                            return;
+                        }
+                        if((!contact.name) && (!contact.phone) && (!contact.company)) {
+                            this.DeleteEdit(i);
+                        }
+                        this.editingIndex = -1
+                    },
+                    AddContact() {
+                        this.editingIndex = this.phonebook.length;
+                        this.phonebook.push({name: "", phone: "", company: ""})
+                        this.StartEdit(this.phonebook[this.editingIndex], this.editingIndex)
+                    }
+                }
+            })
+            const vm = app.mount('#app');
+        </script>
+    </body>
+</html>
